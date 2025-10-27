@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SolarScript AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-white min-h-screen font-sans">
+  <div class="max-w-2xl mx-auto p-6">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-green-700 mb-2">SolarScript AI</h1>
+      <p class="text-gray-600">Close more appointments. Crush objections. Instantly.</p>
+    </div>
+
+    <div class="bg-white p-8 rounded-xl shadow-lg">
+      <input id="objection" placeholder="e.g. It's too expensive" class="w-full p-4 border border-gray-300 rounded-lg mb-4 text-lg">
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <select id="temp" class="p-4 border border-gray-300 rounded-lg">
+          <option>Hot</option><option>Warm</option><option>Cold</option>
+        </select>
+        <input id="bill" type="number" placeholder="Monthly bill ($)" class="p-4 border border-gray-300 rounded-lg">
+      </div>
+      <button onclick="generate()" class="bg-green-600 hover:bg-green-700 text-white font-bold p-4 w-full rounded-lg text-lg transition">
+        Generate Script
+      </button>
+    </div>
+
+    <div id="result" class="mt-8 bg-gray-50 p-6 rounded-xl hidden">
+      <pre class="whitespace-pre-wrap text-gray-800 font-medium" id="script"></pre>
+    </div>
+  </div>
+
+  <script>
+  async function generate() {
+    const data = {
+      objection: document.getElementById('objection').value || "It's too expensive",
+      temp: document.getElementById('temp').value,
+      bill: document.getElementById('bill').value || 150
+    };
+    const res = await fetch('/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    document.getElementById('script').textContent = json.script;
+    document.getElementById('result').classList.remove('hidden');
+  }
+  </script>
+</body>
+</html>
