@@ -1,12 +1,16 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 import os
 import openai
+import stripe
 
 app = Flask(__name__)
 
-# Use Grok via OpenAI-compatible proxy (we'll fix API later)
+# === CONFIG ===
+stripe.api_key = "sk_test_..."  # REPLACE WITH YOUR KEY LATER
 openai.api_key = os.getenv("GROK_KEY")
-openai.api_base = "https://api.x.ai/v1"  # Grok endpoint
+openai.api_base = "https://api.x.ai/v1"
+
+PRICE_ID = "price_1ABC123..."  # ← PASTE YOUR PRICE ID HERE
 
 @app.route('/')
 def index():
@@ -32,8 +36,24 @@ def generate():
         )
         result = response.choices[0].message.content
     except:
-        result = "API not connected yet. Example:\n\n'Actually, with the 30% tax credit, your system pays for itself in 6 years — and your bill drops to $0. Want to see your custom savings?'"
+        result = "Example:\n\n'With the 30% tax credit, your system pays for itself in 6 years — and your bill drops to $0. Want to see your savings?'"
     return jsonify({"script": result})
+
+# === STRIPE CHECKOUT ===
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout():
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{'price': PRICE_ID, 'quantity': 1}],
+        mode='subscription',
+        success_url='https://solarscript-ai.onrender.com/success',
+        cancel_url='https://solarscript-ai.onrender.com/'
+    )
+    return jsonify({'id': session.id})
+
+@app.route('/success')
+def success():
+    return "<h1>Thanks! Access unlocked. Check email.</h1>"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
